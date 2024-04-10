@@ -26,7 +26,7 @@
             const expenseAmount = document.getElementById('expenseAmount').value;
 
             // Send expense data to backend using fetch API
-            fetch('/add-expense', {
+            fetch('http://localhost:3000/add-expense', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
