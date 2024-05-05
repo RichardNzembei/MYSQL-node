@@ -1,4 +1,5 @@
 const express = require('express');
+
 const mysql = require('mysql');
 const cors = require("cors");
 
@@ -47,6 +48,22 @@ app.post('/add-expense', (req, res) => {
         res.status(200).json({ message: 'Expense added successfully' });
     });
 });
+
+app.get('/get-expenses', (req, res) => {
+    console.log("Handling /get-expenses request");
+    // If using a database, log connection or query errors
+    db.query('SELECT * FROM expenses', (error, results) => {
+        if (error) {
+            console.error('Database query error:', error);
+            res.status(500).send('Database query error');
+            return;
+        }
+        res.status(200).json(results);
+    });
+});
+
+
+
 
 // Start the server
 app.listen(PORT, () => {

@@ -4,6 +4,95 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Add Expense</title>
+    <script src="app.js" type="module"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif; /* Sets the font for the body */
+            background: #f4f4f4; /* Light grey background */
+            padding: 20px; /* Adds padding around the content */
+            margin: 0; /* Removes default margin */
+        }
+
+        h2 {
+            color: #333; /* Dark grey color for the heading */
+        }
+
+        form {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1); /* Adds a subtle shadow around the form */
+            max-width: 500px; /* Limits form width and centers it */
+            margin: 0 auto; /* Centers the form horizontally */
+        }
+
+        label {
+            font-weight: bold; /* Makes label text bold */
+            margin-bottom: 5px; /* Adds space below the label */
+            display: block; /* Ensures each label is on a new line */
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            width: calc(100% - 22px); /* Full width minus padding */
+            padding: 10px; /* Adds padding inside the input fields */
+            margin-bottom: 20px; /* Adds space below the inputs */
+            border: 1px solid #ccc; /* Adds a border to the input */
+            border-radius: 4px; /* Rounds the corners of the input field */
+        }
+
+        button {
+            background: #5cb85c; /* Green background */
+            color: white; /* White text */
+            border: none; /* Removes border */
+            padding: 10px 20px; /* Padding inside the button */
+            cursor: pointer; /* Pointer cursor on hover */
+            border-radius: 5px; /* Rounded corners */
+            font-size: 16px; /* Larger text size */
+        }
+
+        button:hover {
+            background: #4cae4c; /* Slightly darker green on hover */
+        }
+
+        #result {
+            margin-top: 20px; /* Adds space above the result area */
+            padding: 10px;
+            background: #eee; /* Light gray background */
+            border-radius: 5px; /* Rounded corners */
+            color: #333; /* Dark gray text */
+        }
+        h2, h3 {
+        color: #0b6099; /* Dark gray for headers */
+    }
+
+    #recents {
+        margin-top: 20px;
+        background-color: #ffffff; /* White background for the contents */
+        border: 1px solid #e0e0e0; /* Subtle border styling */
+        border-radius: 8px; /* Rounded corners */
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Soft shadow for 3D effect */
+        padding: 15px;
+        max-width: 600px; /* Ensures the container doesn't get too wide on larger screens */
+        width: 100%; /* Responsive width */
+    }
+
+    .expense-item {
+        padding: 10px;
+        margin: 8px 0;
+        background-color: #f9f9f9; /* Slightly off-white for each item */
+        border-left: 5px solid #2196F3; /* Blue accent bar on the left */
+        transition: background-color 0.3s; /* Smooth transition for hover effect */
+    }
+
+    .expense-item:hover {
+        background-color: #e3f2fd; /* Light blue background on hover */
+    }
+
+    .expense-item:last-child {
+        margin-bottom: 0; /* Removes margin from the last item */
+    }
+    </style>
 </head>
 <body>
     <h2>Add Expense</h2>
@@ -16,16 +105,15 @@
     </form>
 
     <div id="result"></div>
-
+    <h3>Recent Expenses</h3>
+    <div id="recents"></div>
     <script>
         document.getElementById('addExpenseForm').addEventListener('submit', function(event) {
             event.preventDefault(); // Prevent default form submission
 
-            // Get expense data from the form
             const expenseName = document.getElementById('expenseName').value;
             const expenseAmount = document.getElementById('expenseAmount').value;
 
-            // Send expense data to backend using fetch API
             fetch('http://localhost:3000/add-expense', {
                 method: 'POST',
                 headers: {
@@ -35,14 +123,50 @@
             })
             .then(response => response.json())
             .then(data => {
-                // Display result from backend
                 document.getElementById('result').innerText = data.message;
+                fetchExpenses();  // Refresh the list of expenses after adding a new one
             })
             .catch(error => {
                 console.error('Error:', error);
                 document.getElementById('result').innerText = 'An error occurred. Please try again later.';
             });
         });
+
+        function fetchExpenses() {
+    const recentsDiv = document.getElementById('recents');
+    recentsDiv.innerHTML = '<p>Loading expenses...</p>'; // Initial loading message
+
+    fetch('http://localhost:3000/get-expenses')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to fetch');
+            }
+            return response.json();
+        })
+        .then(data => {
+            recentsDiv.innerHTML = ''; // Clear loading message
+            if (data.length === 0) {
+                recentsDiv.innerHTML = '<p>No recent expenses to show.</p>';
+                return;
+            }
+
+            // Slice the data to get the last four expenses
+            const lastFourExpenses = data.slice(-4);
+
+            lastFourExpenses.forEach(expense => {
+                const expenseDiv = document.createElement('div');
+                expenseDiv.className = 'expense-item';
+                expenseDiv.innerHTML = `<strong>${expense.name}</strong> - ksh${expense.amount.toFixed(2)}`;
+                recentsDiv.appendChild(expenseDiv);
+            });
+        })
+        .catch(error => {
+            console.error('Fetch error:', error);
+            recentsDiv.innerHTML = '<p>Error loading expenses. Please try again.</p>';
+        });
+}
+        // Call fetchExpenses on page load to show existing expenses
+        window.onload = fetchExpenses;
     </script>
 </body>
 </html>
